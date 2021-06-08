@@ -77,7 +77,7 @@ from aiortc.contrib.signaling import BYE, add_signaling_arguments, create_signal
 #         return data_bgr
 
 
-async def run(pc, player, recorder, signaling, role):
+async def run(pc, player, signaling):
     def add_tracks():
         if player and player.audio:
             pc.addTrack(player.audio)
@@ -87,19 +87,19 @@ async def run(pc, player, recorder, signaling, role):
         # else:
         #     pc.addTrack(FlagVideoStreamTrack())
 
-    @pc.on("track")
-    def on_track(track):
-        print("Receiving %s" % track.kind)
-        recorder.addTrack(track)
+    # @pc.on("track")
+    # def on_track(track):
+    #     print("Receiving %s" % track.kind)
+    #     recorder.addTrack(track)
 
     # connect signaling
     await signaling.connect()
 
-    if role == "offer":
-        # send offer
-        add_tracks()
-        await pc.setLocalDescription(await pc.createOffer())
-        await signaling.send(pc.localDescription)
+    # if role == "offer":
+    # send offer
+    add_tracks()
+    await pc.setLocalDescription(await pc.createOffer())
+    await signaling.send(pc.localDescription)
 
     # consume signaling
     while True:
@@ -107,13 +107,13 @@ async def run(pc, player, recorder, signaling, role):
 
         if isinstance(obj, RTCSessionDescription):
             await pc.setRemoteDescription(obj)
-            await recorder.start()
+            # await recorder.start()
 
-            if obj.type == "offer":
-                # send answer
-                add_tracks()
-                await pc.setLocalDescription(await pc.createAnswer())
-                await signaling.send(pc.localDescription)
+            # if obj.type == "offer":
+            #     # send answer
+            #     add_tracks()
+            #     await pc.setLocalDescription(await pc.createAnswer())
+            #     await signaling.send(pc.localDescription)
         elif isinstance(obj, RTCIceCandidate):
             await pc.addIceCandidate(obj)
         elif obj is BYE:
@@ -156,9 +156,9 @@ if __name__ == "__main__":
             run(
                 pc=pc,
                 player=player,
-                recorder=recorder,
+                # recorder=recorder,
                 signaling=signaling,
-                role=args.role,
+                # role=args.role,
             )
         )
     except KeyboardInterrupt:
