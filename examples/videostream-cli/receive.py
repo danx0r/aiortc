@@ -1,92 +1,15 @@
 import argparse
 import asyncio
 import logging
-import math
-
-import cv2
-import numpy
-# from av import VideoFrame
-
 from aiortc import (
     RTCIceCandidate,
     RTCPeerConnection,
     RTCSessionDescription,
-    # VideoStreamTrack,
 )
 from aiortc.contrib.media import MediaBlackhole, MediaPlayer, MediaRecorder
-from aiortc.contrib.signaling import BYE, add_signaling_arguments, create_signaling
-
-
-# class FlagVideoStreamTrack(VideoStreamTrack):
-#     """
-#     A video track that returns an animated flag.
-#     """
-#
-#     def __init__(self):
-#         super().__init__()  # don't forget this!
-#         self.counter = 0
-#         height, width = 480, 640
-#
-#         # generate flag
-#         data_bgr = numpy.hstack(
-#             [
-#                 self._create_rectangle(
-#                     width=213, height=480, color=(255, 0, 0)
-#                 ),  # blue
-#                 self._create_rectangle(
-#                     width=214, height=480, color=(255, 255, 255)
-#                 ),  # white
-#                 self._create_rectangle(width=213, height=480, color=(0, 0, 255)),  # red
-#             ]
-#         )
-#
-#         # shrink and center it
-#         M = numpy.float32([[0.5, 0, width / 4], [0, 0.5, height / 4]])
-#         data_bgr = cv2.warpAffine(data_bgr, M, (width, height))
-#
-#         # compute animation
-#         omega = 2 * math.pi / height
-#         id_x = numpy.tile(numpy.array(range(width), dtype=numpy.float32), (height, 1))
-#         id_y = numpy.tile(
-#             numpy.array(range(height), dtype=numpy.float32), (width, 1)
-#         ).transpose()
-#
-#         self.frames = []
-#         for k in range(30):
-#             phase = 2 * k * math.pi / 30
-#             map_x = id_x + 10 * numpy.cos(omega * id_x + phase)
-#             map_y = id_y + 10 * numpy.sin(omega * id_x + phase)
-#             self.frames.append(
-#                 VideoFrame.from_ndarray(
-#                     cv2.remap(data_bgr, map_x, map_y, cv2.INTER_LINEAR), format="bgr24"
-#                 )
-#             )
-#
-#     async def recv(self):
-#         pts, time_base = await self.next_timestamp()
-#
-#         frame = self.frames[self.counter % 30]
-#         frame.pts = pts
-#         frame.time_base = time_base
-#         self.counter += 1
-#         return frame
-#
-#     def _create_rectangle(self, width, height, color):
-#         data_bgr = numpy.zeros((height, width, 3), numpy.uint8)
-#         data_bgr[:, :] = color
-#         return data_bgr
-
+from aiortc.contrib.signaling import BYE, add_signaling_arguments, TcpSocketSignaling
 
 async def run(pc, recorder, signaling):
-    # def add_tracks():
-    #     if player and player.audio:
-    #         pc.addTrack(player.audio)
-    #
-    #     if player and player.video:
-    #         pc.addTrack(player.video)
-        # else:
-        #     pc.addTrack(FlagVideoStreamTrack())
-
     @pc.on("track")
     def on_track(track):
         print("Receiving %s" % track.kind)
@@ -95,13 +18,6 @@ async def run(pc, recorder, signaling):
     # connect signaling
     await signaling.connect()
 
-    # if role == "offer":
-    #     # send offer
-    #     add_tracks()
-    #     await pc.setLocalDescription(await pc.createOffer())
-    #     await signaling.send(pc.localDescription)
-
-    # consume signaling
     while True:
         obj = await signaling.receive()
 
@@ -133,7 +49,7 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
 
     # create signaling and peer connection
-    signaling = create_signaling(args)
+    signaling = TcpSocketSignaling(args.signaling_host, args.signaling_port)
     pc = RTCPeerConnection()
 
     # create media source
