@@ -6,8 +6,8 @@ from aiortc import (
     RTCPeerConnection,
     RTCSessionDescription,
 )
-from aiortc.contrib.media import MediaBlackhole, MediaPlayer, MediaRecorder
-from aiortc.contrib.signaling import BYE, add_signaling_arguments, TcpSocketSignaling
+from aiortc.contrib.media import MediaRecorder
+from aiortc.contrib.signaling import BYE, TcpSocketSignaling
 
 async def run(pc, recorder, signaling):
     @pc.on("track")
@@ -15,18 +15,13 @@ async def run(pc, recorder, signaling):
         print("Receiving %s" % track.kind)
         recorder.addTrack(track)
 
-    # connect signaling
     await signaling.connect()
-
     while True:
         obj = await signaling.receive()
-
+        print ("connected")
         if isinstance(obj, RTCSessionDescription):
             await pc.setRemoteDescription(obj)
             await recorder.start()
-
-            # send answer
-            # add_tracks()
             await pc.setLocalDescription(await pc.createAnswer())
             await signaling.send(pc.localDescription)
         elif isinstance(obj, RTCIceCandidate):
@@ -35,14 +30,10 @@ async def run(pc, recorder, signaling):
             print("Exiting")
             break
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Video stream from the command line")
-    # parser.add_argument("role", choices=["offer", "answer"])
-    # parser.add_argument("--play-from", help="Read the media from a file and sent it."),
     parser.add_argument("--record-to", required=True, help="Write received media to a file."),
     parser.add_argument("--verbose", "-v", action="count")
-    # add_signaling_arguments(parser)
     args = parser.parse_args()
 
     if args.verbose:
@@ -52,17 +43,8 @@ if __name__ == "__main__":
     signaling = TcpSocketSignaling("127.0.0.1", 5676)
     pc = RTCPeerConnection()
 
-    # create media source
-    # if args.play_from:
-    #     player = MediaPlayer(args.play_from)
-    # else:
-    #     player = None
-
     # create media sink
-    # if args.record_to:
     recorder = MediaRecorder(args.record_to)
-    # else:
-    #     recorder = MediaBlackhole()
 
     # run event loop
     loop = asyncio.get_event_loop()

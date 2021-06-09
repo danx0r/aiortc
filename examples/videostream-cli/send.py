@@ -6,8 +6,8 @@ from aiortc import (
     RTCPeerConnection,
     RTCSessionDescription
 )
-from aiortc.contrib.media import MediaBlackhole, MediaPlayer, MediaRecorder
-from aiortc.contrib.signaling import BYE, add_signaling_arguments, TcpSocketSignaling
+from aiortc.contrib.media import MediaPlayer
+from aiortc.contrib.signaling import BYE, TcpSocketSignaling
 
 async def run(pc, player, signaling):
     def add_tracks():
@@ -16,14 +16,13 @@ async def run(pc, player, signaling):
 
         if player and player.video:
             pc.addTrack(player.video)
-    await signaling.connect()
 
-    # send offer
+    await signaling.connect()
     add_tracks()
     await pc.setLocalDescription(await pc.createOffer())
     await signaling.send(pc.localDescription)
 
-    # consume signaling
+    print ("connected")
     while True:
         obj = await signaling.receive()
 
@@ -37,49 +36,34 @@ async def run(pc, player, signaling):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Video stream from the command line")
-    # parser.add_argument("role", choices=["offer", "answer"])
     parser.add_argument("--play-from", required=True, help="Read the media from a file and sent it."),
-    # parser.add_argument("--record-to", help="Write received media to a file."),
     parser.add_argument("--verbose", "-v", action="count")
-    # add_signaling_arguments(parser)
     args = parser.parse_args()
 
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
     # create signaling and peer connection
-    # signaling = create_signaling(args)
     signaling = TcpSocketSignaling("127.0.0.1", 5676)
     pc = RTCPeerConnection()
 
     # create media source
-    # if args.play_from:
     player = MediaPlayer(args.play_from)
-    # else:
-    #     player = None
-
-    # create media sink
-    # if args.record_to:
-    #     recorder = MediaRecorder(args.record_to)
-    # else:
-    #     recorder = MediaBlackhole()
 
     # run event loop
     loop = asyncio.get_event_loop()
     try:
+        print ("awaiting connection")
         loop.run_until_complete(
             run(
                 pc=pc,
                 player=player,
-                # recorder=recorder,
                 signaling=signaling,
-                # role=args.role,
             )
         )
     except KeyboardInterrupt:
         pass
     finally:
         # cleanup
-        loop.run_until_complete(recorder.stop())
         loop.run_until_complete(signaling.close())
         loop.run_until_complete(pc.close())
