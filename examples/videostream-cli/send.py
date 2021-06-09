@@ -27,9 +27,11 @@ async def run(pc, player, signaling):
         obj = await signaling.receive()
 
         if isinstance(obj, RTCSessionDescription):
+            print ("Sess")
             await pc.setRemoteDescription(obj)
-        elif isinstance(obj, RTCIceCandidate):
-            await pc.addIceCandidate(obj)
+        # elif isinstance(obj, RTCIceCandidate):
+        #     print ("Ice")
+        #     await pc.addIceCandidate(obj)
         elif obj is BYE:
             print("Exiting")
             break
