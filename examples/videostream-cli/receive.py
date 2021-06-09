@@ -38,31 +38,31 @@ async def run(pc, recorder, signaling):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Video stream from the command line")
-    parser.add_argument("role", choices=["offer", "answer"])
-    parser.add_argument("--play-from", help="Read the media from a file and sent it."),
-    parser.add_argument("--record-to", help="Write received media to a file."),
+    # parser.add_argument("role", choices=["offer", "answer"])
+    # parser.add_argument("--play-from", help="Read the media from a file and sent it."),
+    parser.add_argument("--record-to", required=True, help="Write received media to a file."),
     parser.add_argument("--verbose", "-v", action="count")
-    add_signaling_arguments(parser)
+    # add_signaling_arguments(parser)
     args = parser.parse_args()
 
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
     # create signaling and peer connection
-    signaling = TcpSocketSignaling(args.signaling_host, args.signaling_port)
+    signaling = TcpSocketSignaling("127.0.0.1", 5676)
     pc = RTCPeerConnection()
 
     # create media source
-    if args.play_from:
-        player = MediaPlayer(args.play_from)
-    else:
-        player = None
+    # if args.play_from:
+    #     player = MediaPlayer(args.play_from)
+    # else:
+    #     player = None
 
     # create media sink
-    if args.record_to:
-        recorder = MediaRecorder(args.record_to)
-    else:
-        recorder = MediaBlackhole()
+    # if args.record_to:
+    recorder = MediaRecorder(args.record_to)
+    # else:
+    #     recorder = MediaBlackhole()
 
     # run event loop
     loop = asyncio.get_event_loop()
