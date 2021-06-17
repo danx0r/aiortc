@@ -1,0 +1,53 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Demo - Record Photo From Webcam Using Javascript</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<style type="text/css">
+
+button {
+    width: 150px;
+    padding: 10px;
+    display: block;
+    margin: 20px auto;
+    border: 2px solid #111111;
+    cursor: pointer;
+    background-color: white;
+}
+
+#start-camera {
+    margin-top: 50px;
+}
+
+#video {
+    display: none;
+    margin: 50px auto 0 auto;
+}
+
+#start-record, #stop-record, #download-video {
+    display: none;
+}
+
+#download-video {
+    text-align: center;
+    margin: 20px 0 0 0;
+}
+
+</style>
+</head>
+
+<body>
+
+<button id="start-camera">Start Camera</button>
+<video id="video" width="320" height="240" autoplay></video>
+<button id="start-record">Start Recording</button>
+<button id="stop-record">Stop Recording</button>
+<a id="download-video" download="test.webm">Download Video</a>
+
+<script src="js.js"></script>
+
+</body>
+</html>
+
